@@ -44,6 +44,10 @@ import org.springframework.util.Assert;
  * @see BootstrapContext
  * @see ConfigurableBootstrapContext
  */
+// BootstrapRegistry 是 Spring Boot 启动预备阶段的核心组件。如果说 BootstrapContext 是用来“读”的只读视图，那么 BootstrapRegistry 就是用来“写”的配置接口。
+// 早期对象注册中心：它允许在 ApplicationContext（正式 Spring 容器）创建之前，注册一些必要的单例对象。这些对象通常创建成本较高（如配置中心客户端）或需要在环境处理阶段共享（如加解密工具）。
+// 类型驱动存储：使用 Java Class 作为键，这意味着在引导期间，每种类型只能存储一个实例或一个供应者。
+// 生命周期桥接：它提供了一个监听机制，允许在引导上下文关闭（即正式容器准备好）时执行特定操作。最常见的用法是将引导期间创建的对象“搬家”到正式的 Spring 容器中作为普通的 Bean。
 public interface BootstrapRegistry {
 
 	/**
@@ -54,6 +58,8 @@ public interface BootstrapRegistry {
 	 * @param type the instance type
 	 * @param instanceSupplier the instance supplier
 	 */
+	// 向注册表中注册一个指定类型的供应者。
+	// 如果该类型尚未注册，直接存入。
 	<T> void register(Class<T> type, InstanceSupplier<T> instanceSupplier);
 
 	/**
@@ -62,6 +68,7 @@ public interface BootstrapRegistry {
 	 * @param type the instance type
 	 * @param instanceSupplier the instance supplier
 	 */
+	// 仅在类型不存在时才注册。
 	<T> void registerIfAbsent(Class<T> type, InstanceSupplier<T> instanceSupplier);
 
 	/**
@@ -70,6 +77,7 @@ public interface BootstrapRegistry {
 	 * @param type the instance type
 	 * @return {@code true} if the type has already been registered
 	 */
+	// 判断某个类型是否已经存在于注册表中。
 	<T> boolean isRegistered(Class<T> type);
 
 	/**
@@ -78,6 +86,7 @@ public interface BootstrapRegistry {
 	 * @param type the instance type
 	 * @return the registered {@link InstanceSupplier} or {@code null}
 	 */
+	// 获取已注册的供应者对象。
 	<T> InstanceSupplier<T> getRegisteredInstanceSupplier(Class<T> type);
 
 	/**
@@ -86,6 +95,7 @@ public interface BootstrapRegistry {
 	 * the {@link ApplicationContext} has been prepared.
 	 * @param listener the listener to add
 	 */
+	// 添加关闭监听器。
 	void addCloseListener(ApplicationListener<BootstrapContextClosedEvent> listener);
 
 	/**
@@ -94,6 +104,7 @@ public interface BootstrapRegistry {
 	 * @param <T> the instance type
 	 * @see Scope
 	 */
+	// 内部函数式接口
 	@FunctionalInterface
 	interface InstanceSupplier<T> {
 
@@ -103,6 +114,8 @@ public interface BootstrapRegistry {
 		 * bootstrap instances.
 		 * @return the instance
 		 */
+		// 核心方法。
+		// 当需要实例时被调用，它可以访问当前的 BootstrapContext 以获取其他已注册的依赖。
 		T get(BootstrapContext context);
 
 		/**
@@ -110,6 +123,7 @@ public interface BootstrapRegistry {
 		 * @return the scope
 		 * @since 2.4.2
 		 */
+		// 返回实例的作用域，默认是 SINGLETON。
 		default Scope getScope() {
 			return Scope.SINGLETON;
 		}
@@ -120,6 +134,7 @@ public interface BootstrapRegistry {
 		 * @return a new {@link InstanceSupplier} instance with the new scope
 		 * @since 2.4.2
 		 */
+		// 装饰器方法。创建一个具有新作用域的新供应者。
 		default InstanceSupplier<T> withScope(Scope scope) {
 			Assert.notNull(scope, "'scope' must not be null");
 			InstanceSupplier<T> parent = this;
@@ -145,6 +160,7 @@ public interface BootstrapRegistry {
 		 * @param instance the instance
 		 * @return a new {@link InstanceSupplier}
 		 */
+		// 直接将一个现有的对象包装成供应者。
 		static <T> InstanceSupplier<T> of(T instance) {
 			return (registry) -> instance;
 		}
@@ -156,6 +172,7 @@ public interface BootstrapRegistry {
 		 * @param supplier the supplier that will provide the instance
 		 * @return a new {@link InstanceSupplier}
 		 */
+		// 将标准的 Java Supplier 转换为 InstanceSupplier。
 		static <T> InstanceSupplier<T> from(Supplier<T> supplier) {
 			return (registry) -> (supplier != null) ? supplier.get() : null;
 		}

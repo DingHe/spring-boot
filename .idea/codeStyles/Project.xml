@@ -41,7 +41,6 @@
       </option>
     </GroovyCodeStyleSettings>
     <JavaCodeStyleSettings>
-      <option name="BLANK_LINES_AROUND_FIELD_WITH_ANNOTATIONS" value="1" />
       <option name="CLASS_NAMES_IN_JAVADOC" value="3" />
       <option name="INSERT_INNER_CLASS_IMPORTS" value="true" />
       <option name="CLASS_COUNT_TO_USE_IMPORT_ON_DEMAND" value="500" />
@@ -51,7 +50,7 @@
       </option>
       <option name="IMPORT_LAYOUT_TABLE">
         <value>
-          <package name="" withSubpackages="true" static="false" module="true" />
+          <package name="" withSubpackages="true" static="false" />
           <emptyLine />
           <package name="java" withSubpackages="true" static="false" />
           <emptyLine />
@@ -80,6 +79,9 @@
       <option name="NAME_COUNT_TO_USE_STAR_IMPORT" value="20" />
       <option name="NAME_COUNT_TO_USE_STAR_IMPORT_FOR_MEMBERS" value="20" />
     </JetCodeStyleSettings>
+    <ScalaCodeStyleSettings>
+      <option name="MULTILINE_STRING_CLOSING_QUOTES_ON_NEW_LINE" value="true" />
+    </ScalaCodeStyleSettings>
     <editorconfig>
       <option name="ENABLED" value="false" />
     </editorconfig>

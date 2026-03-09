@@ -23,6 +23,8 @@ package org.springframework.boot;
  * @see ApplicationRunner
  * @see CommandLineRunner
  */
+// 在 Spring Boot 的设计架构中，它的存在主要是为了统一管理不同类型的运行器。
+// 插件化扩展：通过这个标记接口，Spring Boot 的启动流程逻辑（即 callRunners 方法）可以保持通用性。如果未来 Spring Boot 引入了第三种运行器（例如 ReactiveRunner），只需要让它继承 Runner 接口，原有的启动逻辑无需修改即可兼容。
 interface Runner {
 
 }

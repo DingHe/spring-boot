@@ -33,12 +33,16 @@ import org.springframework.util.Assert;
  * @author Phillip Webb
  * @since 2.4.0
  */
+// DefaultBootstrapContext 是 Spring Boot 引导阶段核心接口 ConfigurableBootstrapContext 的默认实现。它本质上是一个轻量级的、临时性的单例容器。
+// 引导期容器实现：它实现了 BootstrapRegistry（写）和 BootstrapContext（读）两个接口，为 Spring Boot 启动的最早期提供对象存储和检索服务。
+// 管理启动资源：在正式的 Spring 容器 ApplicationContext 刷新之前，它负责创建并管理一些必要的重型组件（如配置加解密工具、定制化的环境处理器）。
+// 生命周期转换：它负责维护这些早期对象的生命周期。当 run 方法进行到 prepareContext 阶段时，它会触发关闭事件，将其管理的资源移交给正式的 Spring 容器。
 public class DefaultBootstrapContext implements ConfigurableBootstrapContext {
-
+	// 存储“实例供应者”。它记录了哪个类应该由哪个工厂逻辑来创建。
 	private final Map<Class<?>, InstanceSupplier<?>> instanceSuppliers = new HashMap<>();
-
+	// 作用：单例池。存储已经创建出来的单例对象。只有当 Scope 为 SINGLETON 时，对象才会被存入此 Map 缓存。
 	private final Map<Class<?>, Object> instances = new HashMap<>();
-
+	// 作用：事件广播器。负责管理和触发 BootstrapContextClosedEvent。
 	private final ApplicationEventMulticaster events = new SimpleApplicationEventMulticaster();
 
 	@Override
@@ -50,7 +54,8 @@ public class DefaultBootstrapContext implements ConfigurableBootstrapContext {
 	public <T> void registerIfAbsent(Class<T> type, InstanceSupplier<T> instanceSupplier) {
 		register(type, instanceSupplier, false);
 	}
-
+	// 内部统一注册逻辑。
+	// 使用 synchronized 确保线程安全。它会检查该类是否已经产生了实例，如果实例已经创建（在 instances 中存在），则禁止重新注册供应者，否则会抛出异常。
 	private <T> void register(Class<T> type, InstanceSupplier<T> instanceSupplier, boolean replaceExisting) {
 		Assert.notNull(type, "'type' must not be null");
 		Assert.notNull(instanceSupplier, "'instanceSupplier' must not be null");
